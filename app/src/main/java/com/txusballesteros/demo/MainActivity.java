@@ -18,6 +18,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         snakeView = (SnakeView)findViewById(R.id.snake);
+        snakeView.setMinValue(0);
+        snakeView.setMaxValue(1);
     }
 
     @Override

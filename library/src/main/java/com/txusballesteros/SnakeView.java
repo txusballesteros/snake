@@ -50,7 +50,15 @@ public class SnakeView extends View {
     private float scaleInX = 0f;
     private float scaleInY = 0f;
     private float minValue = 0f;
-    private float maxValue = 0f;
+    private float maxValue = 1f;
+
+    public void setMinValue(float minValue) {
+        this.minValue = minValue;
+    }
+
+    public void setMaxValue(float maxValue) {
+        this.maxValue = maxValue;
+    }
 
     public void addValue(float value) {
         if (values.size() == maximumNumberOfValues) {
@@ -147,12 +155,6 @@ public class SnakeView extends View {
         if (!values.isEmpty()) {
             scaleInY = 0f;
             scaleInX = (drawingArea.width() / (maximumNumberOfValues - 1));
-            minValue = values.peek();
-            maxValue = values.peek();
-            for (Float value : values) {
-                minValue = Math.min(minValue, value);
-                maxValue = Math.max(maxValue, value);
-            }
             scaleInY = (drawingArea.height() / (maxValue - minValue));
         }
     }
