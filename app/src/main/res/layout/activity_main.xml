@@ -26,7 +26,6 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="#ffffff">
 
     <com.txusballesteros.SnakeView
@@ -35,7 +34,6 @@
         android:layout_width="match_parent"
         android:paddingLeft="4dp"
         android:paddingRight="4dp"
-        android:layout_height="100dp"
-        app:maximumNumberOfValues="3"/>
+        android:layout_height="100dp" />
 
 </FrameLayout>
