@@ -3,6 +3,8 @@ Snake View
 
 ![](assets/demo.gif)
 
+Snake library is a simple and animation line chart for Android.
+
 ## Latest Version
 
 ![](https://img.shields.io/badge/platform-android-green.svg)
