@@ -38,7 +38,6 @@ import android.view.View;
 import android.view.animation.LinearInterpolator;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -77,32 +76,37 @@ public class SnakeView extends View {
         }
         this.maximumNumberOfValues = maximumNumberOfValues;
         calculateScales();
-        initializeCache();
+        initializeCaches();
     }
 
     public void setMinValue(float minValue) {
         this.minValue = minValue;
         calculateScales();
-        initializeCache();
+        initializeCaches();
     }
 
     public void setMaxValue(float maxValue) {
         this.maxValue = maxValue;
         calculateScales();
-        initializeCache();
+        initializeCaches();
     }
 
     public void addValue(float value) {
         if (value < minValue || value > maxValue) {
             throw new IllegalArgumentException("The value is out of min or max limits.");
         }
-        previousValuesCache = reverseAndCloneCache();
+        previousValuesCache = cloneCache();
         if (valuesCache.size() == maximumNumberOfValues) {
             valuesCache.poll();
         }
         valuesCache.add(value);
-        currentValuesCache = reverseAndCloneCache();
+        currentValuesCache = cloneCache();
         playAnimation();
+    }
+
+    public void clear() {
+        initializeCaches();
+        invalidate();
     }
 
     public SnakeView(Context context) {
@@ -155,7 +159,7 @@ public class SnakeView extends View {
 
     private void initializeView() {
         initializePaint();
-        initializeCache();
+        initializeCaches();
     }
 
     private void initializePaint() {
@@ -167,14 +171,14 @@ public class SnakeView extends View {
         paint.setStrokeWidth(dp2px(strokeWidth));
     }
 
-    private void initializeCache() {
+    private void initializeCaches() {
         if (isInEditMode()) {
             initializeCacheForDesigner();
         } else {
             initializeCacheForRuntime();
         }
-        previousValuesCache = reverseAndCloneCache();
-        currentValuesCache = reverseAndCloneCache();
+        previousValuesCache = cloneCache();
+        currentValuesCache = cloneCache();
     }
 
     private void initializeCacheForDesigner() {
@@ -195,10 +199,8 @@ public class SnakeView extends View {
         }
     }
 
-    private List<Float> reverseAndCloneCache() {
-        List<Float> reversedList = new ArrayList<>(valuesCache);
-        Collections.reverse(reversedList);
-        return reversedList;
+    private List<Float> cloneCache() {
+        return new ArrayList<>(valuesCache);
     }
 
     private float dp2px(float value) {
@@ -213,8 +215,8 @@ public class SnakeView extends View {
     }
 
     private void calculateDrawingArea(int width, int height) {
-        int left = strokeWidth + getPaddingLeft();
-        int top = strokeWidth + getPaddingTop();
+        int left = (strokeWidth * 2) + getPaddingLeft();
+        int top = (strokeWidth * 2) + getPaddingTop();
         int right = width - getPaddingRight() - strokeWidth;
         int bottom = height - getPaddingBottom() - strokeWidth;
         drawingArea = new RectF(left, top, right, bottom);
@@ -237,7 +239,7 @@ public class SnakeView extends View {
             float previousValue = previousValuesCache.get(index);
             float currentValue = currentValuesCache.get(index);
             float pathValue = previousValue + ((currentValue - previousValue) * animationProgress);
-            float x = drawingArea.right - (scaleInX * index);
+            float x = drawingArea.left + (scaleInX * index);
             float y = drawingArea.bottom - ((pathValue - minValue) * scaleInY);
             if (index == 0) {
                 path.moveTo(x, y);
