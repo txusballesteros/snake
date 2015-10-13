@@ -25,58 +25,58 @@
 package com.txusballesteros.demo;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
-import android.view.View;
+import android.widget.TextView;
 
 import com.txusballesteros.SnakeView;
 
 public class MainActivity extends AppCompatActivity {
+    private float[] values = new float[] { 60, 70, 80, 90, 100,
+                                          150, 150, 160, 170, 175, 180,
+                                          170, 140, 130, 110, 90, 80, 60};
+    private TextView text;
     private SnakeView snakeView;
+    private int position = 0;
+    private boolean stop = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        text = (TextView)findViewById(R.id.text);
         snakeView = (SnakeView)findViewById(R.id.snake);
-        snakeView.setMinValue(0);
-        snakeView.setMaxValue(1);
-        snakeView.setMaximumNumberOfValues(50);
+    }
 
-        findViewById(R.id.addMin).setOnClickListener(new View.OnClickListener() {
+    @Override
+    protected void onStart() {
+        super.onStart();
+        stop = false;
+        generateValue();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        stop = true;
+    }
+
+    private void generateValue() {
+        if (position < (values.length - 1)) {
+            position++;
+        } else {
+            position = 0;
+        }
+        float value = values[position];
+        snakeView.addValue(value);
+        text.setText(Integer.toString((int)value));
+        new Handler().postDelayed(new Runnable() {
             @Override
-            public void onClick(View v) {
-                snakeView.addValue(0f);
+            public void run() {
+                if (!stop) {
+                    generateValue();
+                }
             }
-        });
-        findViewById(R.id.addMid1).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                snakeView.addValue(0.25f);
-            }
-        });
-        findViewById(R.id.addMid2).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                snakeView.addValue(0.5f);
-            }
-        });
-        findViewById(R.id.addMid3).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                snakeView.addValue(0.75f);
-            }
-        });
-        findViewById(R.id.addMax).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                snakeView.addValue(1f);
-            }
-        });
-        findViewById(R.id.addClr).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                snakeView.clear();
-            }
-        });
+        }, 1000);
     }
 }

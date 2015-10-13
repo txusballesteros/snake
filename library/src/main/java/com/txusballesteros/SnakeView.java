@@ -47,7 +47,7 @@ public class SnakeView extends View {
     private final static int DEFAULT_MAXIMUM_NUMBER_OF_VALUES_FOR_RUNTIME = 10;
     private final static int DEFAULT_STROKE_COLOR = 0xff78c257;
     private final static int DEFAULT_STROKE_WIDTH_IN_DP = 3;
-    public static final int DEFAULT_ANIMATION_DURATION = 300;
+    public static final int DEFAULT_ANIMATION_DURATION = 200;
     public static final float BEZIER_FINE_FIT = 0.5f;
     public static final int DEF_STYLE_ATTR = 0;
     public static final int DEF_STYLE_RES = 0;
