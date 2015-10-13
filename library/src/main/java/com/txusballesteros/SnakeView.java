@@ -54,7 +54,7 @@ public class SnakeView extends View {
     public static final int DEF_STYLE_RES = 0;
     public static final float DEFAULT_MIN_VALUE = 0f;
     public static final float DEFAULT_MAX_VALUE = 1f;
-    public static final int MINUMUM_NUMBER_OF_VALUES = 3;
+    public static final int MINIMUM_NUMBER_OF_VALUES = 3;
 
     private int maximumNumberOfValues = DEFAULT_MAXIMUM_NUMBER_OF_VALUES_FOR_RUNTIME;
     private int strokeColor = DEFAULT_STROKE_COLOR;
@@ -72,7 +72,7 @@ public class SnakeView extends View {
     private float maxValue = DEFAULT_MAX_VALUE;
 
     public void setMaximumNumberOfValues(int maximumNumberOfValues) {
-        if (maximumNumberOfValues < MINUMUM_NUMBER_OF_VALUES) {
+        if (maximumNumberOfValues < MINIMUM_NUMBER_OF_VALUES) {
             throw new IllegalArgumentException("The maximum number of values cannot be less than three.");
         }
         this.maximumNumberOfValues = maximumNumberOfValues;
@@ -147,7 +147,7 @@ public class SnakeView extends View {
                 defaultMaximumNumberOfValues);
         animationDuration = attributes.getInteger(R.styleable.SnakeView_animationDuration,
                 DEFAULT_ANIMATION_DURATION);
-        if (maximumNumberOfValues < MINUMUM_NUMBER_OF_VALUES) {
+        if (maximumNumberOfValues < MINIMUM_NUMBER_OF_VALUES) {
             throw new IllegalArgumentException("The maximum number of values cannot be less than three.");
         }
         attributes.recycle();
