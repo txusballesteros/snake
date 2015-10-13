@@ -49,7 +49,6 @@ install {
             project {
                 packaging 'aar'
                 name 'Snake'
-                artifactId 'Snake'
                 url siteUrl
                 licenses {
                     license {
