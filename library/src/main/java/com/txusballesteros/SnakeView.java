@@ -31,7 +31,6 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
-import android.support.annotation.FloatRange;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
@@ -44,14 +43,16 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class SnakeView extends View {
-    private final static int DEFAULT_MAXIMUN_NUMBER_OF_VALUES_FOR_DESIGNER = 5;
-    private final static int DEFAULT_MAXIMUN_NUMBER_OF_VALUES_FOR_RUNTIME = 10;
+    private final static int DEFAULT_MAXIMUM_NUMBER_OF_VALUES_FOR_DESIGNER = 3;
+    private final static int DEFAULT_MAXIMUM_NUMBER_OF_VALUES_FOR_RUNTIME = 10;
     private final static int DEFAULT_STROKE_COLOR = 0xff78c257;
-    private final static int DEFAULT_STROKE_WIDTH_DP = 3;
+    private final static int DEFAULT_STROKE_WIDTH_IN_DP = 3;
     public static final int ANIMATION_DURATION = 300;
-    private int maximumNumberOfValues = DEFAULT_MAXIMUN_NUMBER_OF_VALUES_FOR_RUNTIME;
+    public static final float BEZIER_FINE_FIT = 0.5f;
+
+    private int maximumNumberOfValues = DEFAULT_MAXIMUM_NUMBER_OF_VALUES_FOR_RUNTIME;
     private int strokeColor = DEFAULT_STROKE_COLOR;
-    private int strokeWidth = DEFAULT_STROKE_WIDTH_DP;
+    private int strokeWidth = DEFAULT_STROKE_WIDTH_IN_DP;
     private RectF drawingArea;
     private Paint paint;
     private Queue<Float> valuesCache;
@@ -122,13 +123,11 @@ public class SnakeView extends View {
     }
 
     private void initializeCacheForDesigner() {
-        maximumNumberOfValues = DEFAULT_MAXIMUN_NUMBER_OF_VALUES_FOR_DESIGNER;
+        maximumNumberOfValues = DEFAULT_MAXIMUM_NUMBER_OF_VALUES_FOR_DESIGNER;
         valuesCache = new ConcurrentLinkedQueue<>();
-        valuesCache.add(maxValue);
         valuesCache.add(minValue);
         valuesCache.add(maxValue);
         valuesCache.add(minValue);
-        valuesCache.add(maxValue);
         previousValuesCache = reverseCache();
         currentValuesCache = reverseCache();
     }
@@ -178,8 +177,8 @@ public class SnakeView extends View {
 
     private Path buildPath() {
         Path path = new Path();
-        float previousX = 0f;
-        float previousY = 0f;
+        float previousX = drawingArea.left;
+        float previousY = drawingArea.bottom;
         for (int index = 0; index < currentValuesCache.size(); index++) {
             float previousValue = previousValuesCache.get(index);
             float currentValue = currentValuesCache.get(index);
@@ -189,7 +188,16 @@ public class SnakeView extends View {
             if (index == 0) {
                 path.moveTo(x, y);
             } else {
-                path.cubicTo(x, previousY, previousX, y, x, y);
+                float bezierControlX = previousX + ((x - previousX) * BEZIER_FINE_FIT);
+                float controlPointX1 = bezierControlX;
+                float controlPointY1 = previousY;
+                float controlPointX2 = bezierControlX;
+                float controlPointY2 = y;
+                float endPointX = x;
+                float endPointY = y;
+                path.cubicTo(controlPointX1, controlPointY1,
+                             controlPointX2, controlPointY2,
+                             endPointX, endPointY);
             }
             previousX = x;
             previousY = y;
@@ -208,14 +216,15 @@ public class SnakeView extends View {
     }
 
     private void playAnimation() {
-        ObjectAnimator animator = ObjectAnimator.ofFloat(this, "progress", 0.0f, 1.0f);
+        ObjectAnimator animator = ObjectAnimator.ofFloat(this, "animationProgress", 0.0f, 1.0f);
         animator.setTarget(this);
         animator.setDuration(ANIMATION_DURATION);
         animator.setInterpolator(new LinearInterpolator());
         animator.start();
     }
 
-    public void setProgress(@FloatRange(from=0.0, to=1.0)  float progress) {
+    @SuppressWarnings("unused")
+    private void setAnimationProgress(float progress) {
         this.animationProgress = progress;
         invalidate();
     }
