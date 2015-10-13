@@ -77,33 +77,31 @@ public class SnakeView extends View {
         }
         this.maximumNumberOfValues = maximumNumberOfValues;
         calculateScales();
-        if (isInEditMode()) {
-            initializeCacheForDesigner();
-        } else {
-            initializeCacheForRuntime();
-        }
+        initializeCache();
     }
 
     public void setMinValue(float minValue) {
         this.minValue = minValue;
         calculateScales();
+        initializeCache();
     }
 
     public void setMaxValue(float maxValue) {
         this.maxValue = maxValue;
         calculateScales();
+        initializeCache();
     }
 
     public void addValue(float value) {
         if (value < minValue || value > maxValue) {
-            throw new IllegalArgumentException("The value is out of min or max valuesCache limits.");
+            throw new IllegalArgumentException("The value is out of min or max limits.");
         }
-        previousValuesCache = reverseCache();
+        previousValuesCache = reverseAndCloneCache();
         if (valuesCache.size() == maximumNumberOfValues) {
             valuesCache.poll();
         }
         valuesCache.add(value);
-        currentValuesCache = reverseCache();
+        currentValuesCache = reverseAndCloneCache();
         playAnimation();
     }
 
@@ -134,7 +132,7 @@ public class SnakeView extends View {
     private void configureAttributes(AttributeSet attrs) {
         TypedArray attributes = getContext().getTheme()
                 .obtainStyledAttributes(attrs, R.styleable.SnakeView,
-                    DEF_STYLE_ATTR, DEF_STYLE_RES);
+                        DEF_STYLE_ATTR, DEF_STYLE_RES);
         strokeColor = attributes.getColor(R.styleable.SnakeView_strokeColor,
                 DEFAULT_STROKE_COLOR);
         strokeWidth = attributes.getDimensionPixelSize(R.styleable.SnakeView_strokeWidth,
@@ -156,17 +154,27 @@ public class SnakeView extends View {
     }
 
     private void initializeView() {
+        initializePaint();
+        initializeCache();
+    }
+
+    private void initializePaint() {
         paint = new Paint();
         paint.setFlags(Paint.ANTI_ALIAS_FLAG);
         paint.setColor(strokeColor);
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeCap(Paint.Cap.ROUND);
         paint.setStrokeWidth(dp2px(strokeWidth));
+    }
+
+    private void initializeCache() {
         if (isInEditMode()) {
             initializeCacheForDesigner();
         } else {
             initializeCacheForRuntime();
         }
+        previousValuesCache = reverseAndCloneCache();
+        currentValuesCache = reverseAndCloneCache();
     }
 
     private void initializeCacheForDesigner() {
@@ -178,8 +186,6 @@ public class SnakeView extends View {
                 valuesCache.add(maxValue);
             }
         }
-        previousValuesCache = reverseCache();
-        currentValuesCache = reverseCache();
     }
 
     private void initializeCacheForRuntime() {
@@ -187,11 +193,9 @@ public class SnakeView extends View {
         for (int counter = 0; counter < maximumNumberOfValues; counter++) {
             valuesCache.add(minValue);
         }
-        previousValuesCache = reverseCache();
-        currentValuesCache = reverseCache();
     }
 
-    private List<Float> reverseCache() {
+    private List<Float> reverseAndCloneCache() {
         List<Float> reversedList = new ArrayList<>(valuesCache);
         Collections.reverse(reversedList);
         return reversedList;
