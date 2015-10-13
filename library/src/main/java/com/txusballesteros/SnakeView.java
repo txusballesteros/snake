@@ -24,29 +24,40 @@
  */
 package com.txusballesteros;
 
+import android.animation.ObjectAnimator;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
+import android.support.annotation.FloatRange;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
+import android.view.animation.LinearInterpolator;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class SnakeView extends View {
-    private final static int DEFAULT_MAX_VALUES = 10;
+    private final static int DEFAULT_MAXIMUN_NUMBER_OF_VALUES_FOR_DESIGNER = 5;
+    private final static int DEFAULT_MAXIMUN_NUMBER_OF_VALUES_FOR_RUNTIME = 10;
     private final static int DEFAULT_STROKE_COLOR = 0xff78c257;
     private final static int DEFAULT_STROKE_WIDTH_DP = 3;
-    private int maximumNumberOfValues = DEFAULT_MAX_VALUES;
+    public static final int ANIMATION_DURATION = 300;
+    private int maximumNumberOfValues = DEFAULT_MAXIMUN_NUMBER_OF_VALUES_FOR_RUNTIME;
     private int strokeColor = DEFAULT_STROKE_COLOR;
     private int strokeWidth = DEFAULT_STROKE_WIDTH_DP;
     private RectF drawingArea;
     private Paint paint;
-    private Queue<Float> values;
+    private Queue<Float> valuesCache;
+    private List<Float> previousValuesCache;
+    private List<Float> currentValuesCache;
+    private float animationProgress = 1.0f;
     private float scaleInX = 0f;
     private float scaleInY = 0f;
     private float minValue = 0f;
@@ -54,19 +65,25 @@ public class SnakeView extends View {
 
     public void setMinValue(float minValue) {
         this.minValue = minValue;
+        calculateScales();
     }
 
     public void setMaxValue(float maxValue) {
         this.maxValue = maxValue;
+        calculateScales();
     }
 
     public void addValue(float value) {
-        if (values.size() == maximumNumberOfValues) {
-            values.poll();
+        if (value < minValue || value > maxValue) {
+            throw new IllegalArgumentException("The value is out of min or max valuesCache limits.");
         }
-        values.add(value);
-        calculateScales();
-        invalidate();
+        previousValuesCache = reverseCache();
+        if (valuesCache.size() == maximumNumberOfValues) {
+            valuesCache.poll();
+        }
+        valuesCache.add(value);
+        currentValuesCache = reverseCache();
+        playAnimation();
     }
 
     public SnakeView(Context context) {
@@ -91,15 +108,44 @@ public class SnakeView extends View {
     }
 
     private void initializeView() {
-        values = new ConcurrentLinkedQueue<>();
         paint = new Paint();
-        if (!isInEditMode()) {
-            paint.setFlags(Paint.ANTI_ALIAS_FLAG);
-        }
+        paint.setFlags(Paint.ANTI_ALIAS_FLAG);
         paint.setColor(strokeColor);
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeCap(Paint.Cap.ROUND);
         paint.setStrokeWidth(dp2px(strokeWidth));
+        if (isInEditMode()) {
+            initializeCacheForDesigner();
+        } else {
+            initializeCacheForRuntime();
+        }
+    }
+
+    private void initializeCacheForDesigner() {
+        maximumNumberOfValues = DEFAULT_MAXIMUN_NUMBER_OF_VALUES_FOR_DESIGNER;
+        valuesCache = new ConcurrentLinkedQueue<>();
+        valuesCache.add(maxValue);
+        valuesCache.add(minValue);
+        valuesCache.add(maxValue);
+        valuesCache.add(minValue);
+        valuesCache.add(maxValue);
+        previousValuesCache = reverseCache();
+        currentValuesCache = reverseCache();
+    }
+
+    private void initializeCacheForRuntime() {
+        valuesCache = new ConcurrentLinkedQueue<>();
+        for (int counter = 0; counter < maximumNumberOfValues; counter++) {
+            valuesCache.add(minValue);
+        }
+        previousValuesCache = reverseCache();
+        currentValuesCache = reverseCache();
+    }
+
+    private List<Float> reverseCache() {
+        List<Float> reversedList = new ArrayList<>(valuesCache);
+        Collections.reverse(reversedList);
+        return reversedList;
     }
 
     private float dp2px(float value) {
@@ -110,6 +156,7 @@ public class SnakeView extends View {
     @Override
     protected void onSizeChanged(int width, int height, int oldWidth, int oldHeight) {
         calculateDrawingArea(width, height);
+        calculateScales();
     }
 
     private void calculateDrawingArea(int width, int height) {
@@ -123,7 +170,7 @@ public class SnakeView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if (!values.isEmpty()) {
+        if (!valuesCache.isEmpty()) {
             Path path = buildPath();
             canvas.drawPath(path, paint);
         }
@@ -131,15 +178,14 @@ public class SnakeView extends View {
 
     private Path buildPath() {
         Path path = new Path();
-        Float[] currentValues = new Float[values.size()];
-        values.toArray(currentValues);
-        float previousX = 0;
-        float previousY = 0;
-        for (int index = 0; index < currentValues.length; index++) {
-            int invertedIndex = ((currentValues.length - 1) - index);
-            float currentValue = currentValues[invertedIndex];
+        float previousX = 0f;
+        float previousY = 0f;
+        for (int index = 0; index < currentValuesCache.size(); index++) {
+            float previousValue = previousValuesCache.get(index);
+            float currentValue = currentValuesCache.get(index);
+            float pathValue = previousValue + ((currentValue - previousValue) * animationProgress);
             float x = drawingArea.right - (scaleInX * index);
-            float y = drawingArea.bottom - ((currentValue - minValue) * scaleInY);
+            float y = drawingArea.bottom - ((pathValue - minValue) * scaleInY);
             if (index == 0) {
                 path.moveTo(x, y);
             } else {
@@ -152,10 +198,25 @@ public class SnakeView extends View {
     }
 
     private void calculateScales() {
-        if (!values.isEmpty()) {
-            scaleInY = 0f;
+        if (drawingArea != null) {
             scaleInX = (drawingArea.width() / (maximumNumberOfValues - 1));
             scaleInY = (drawingArea.height() / (maxValue - minValue));
+        } else {
+            scaleInY = 0f;
+            scaleInX = 0f;
         }
+    }
+
+    private void playAnimation() {
+        ObjectAnimator animator = ObjectAnimator.ofFloat(this, "progress", 0.0f, 1.0f);
+        animator.setTarget(this);
+        animator.setDuration(ANIMATION_DURATION);
+        animator.setInterpolator(new LinearInterpolator());
+        animator.start();
+    }
+
+    public void setProgress(@FloatRange(from=0.0, to=1.0)  float progress) {
+        this.animationProgress = progress;
+        invalidate();
     }
 }

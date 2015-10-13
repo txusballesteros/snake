@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 if (!stopPopulation) {
-                    snakeView.addValue(random.nextFloat());
+                    snakeView.addValue(1 * random.nextFloat());
                     populateSnake();
                 }
             }
