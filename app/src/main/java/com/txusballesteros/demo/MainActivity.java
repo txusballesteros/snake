@@ -20,6 +20,7 @@ public class MainActivity extends AppCompatActivity {
         snakeView = (SnakeView)findViewById(R.id.snake);
         snakeView.setMinValue(0);
         snakeView.setMaxValue(1);
+        snakeView.setMaximumNumberOfValues(5);
     }
 
     @Override

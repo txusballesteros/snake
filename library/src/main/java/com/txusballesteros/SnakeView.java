@@ -27,6 +27,7 @@ package com.txusballesteros;
 import android.animation.ObjectAnimator;
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
@@ -47,8 +48,13 @@ public class SnakeView extends View {
     private final static int DEFAULT_MAXIMUM_NUMBER_OF_VALUES_FOR_RUNTIME = 10;
     private final static int DEFAULT_STROKE_COLOR = 0xff78c257;
     private final static int DEFAULT_STROKE_WIDTH_IN_DP = 3;
-    public static final int ANIMATION_DURATION = 300;
+    public static final int DEFAULT_ANIMATION_DURATION = 300;
     public static final float BEZIER_FINE_FIT = 0.5f;
+    public static final int DEF_STYLE_ATTR = 0;
+    public static final int DEF_STYLE_RES = 0;
+    public static final float DEFAULT_MIN_VALUE = 0f;
+    public static final float DEFAULT_MAX_VALUE = 1f;
+    public static final int MINUMUM_NUMBER_OF_VALUES = 3;
 
     private int maximumNumberOfValues = DEFAULT_MAXIMUM_NUMBER_OF_VALUES_FOR_RUNTIME;
     private int strokeColor = DEFAULT_STROKE_COLOR;
@@ -58,11 +64,25 @@ public class SnakeView extends View {
     private Queue<Float> valuesCache;
     private List<Float> previousValuesCache;
     private List<Float> currentValuesCache;
+    private int animationDuration = DEFAULT_ANIMATION_DURATION;
     private float animationProgress = 1.0f;
     private float scaleInX = 0f;
     private float scaleInY = 0f;
-    private float minValue = 0f;
-    private float maxValue = 1f;
+    private float minValue = DEFAULT_MIN_VALUE;
+    private float maxValue = DEFAULT_MAX_VALUE;
+
+    public void setMaximumNumberOfValues(int maximumNumberOfValues) {
+        if (maximumNumberOfValues < MINUMUM_NUMBER_OF_VALUES) {
+            throw new IllegalArgumentException("The maximum number of values cannot be less than three.");
+        }
+        this.maximumNumberOfValues = maximumNumberOfValues;
+        calculateScales();
+        if (isInEditMode()) {
+            initializeCacheForDesigner();
+        } else {
+            initializeCacheForRuntime();
+        }
+    }
 
     public void setMinValue(float minValue) {
         this.minValue = minValue;
@@ -94,18 +114,45 @@ public class SnakeView extends View {
 
     public SnakeView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        configureAttributes(attrs);
         initializeView();
     }
 
     public SnakeView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        configureAttributes(attrs);
         initializeView();
     }
 
     @TargetApi(21)
     public SnakeView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
+        configureAttributes(attrs);
         initializeView();
+    }
+
+    private void configureAttributes(AttributeSet attrs) {
+        TypedArray attributes = getContext().getTheme()
+                .obtainStyledAttributes(attrs, R.styleable.SnakeView,
+                    DEF_STYLE_ATTR, DEF_STYLE_RES);
+        strokeColor = attributes.getColor(R.styleable.SnakeView_strokeColor,
+                DEFAULT_STROKE_COLOR);
+        strokeWidth = attributes.getDimensionPixelSize(R.styleable.SnakeView_strokeWidth,
+                DEFAULT_STROKE_WIDTH_IN_DP);
+        minValue = attributes.getFloat(R.styleable.SnakeView_minValue, DEFAULT_MIN_VALUE);
+        maxValue = attributes.getFloat(R.styleable.SnakeView_maxValue, DEFAULT_MAX_VALUE);
+        int defaultMaximumNumberOfValues = DEFAULT_MAXIMUM_NUMBER_OF_VALUES_FOR_RUNTIME;
+        if (isInEditMode()) {
+            defaultMaximumNumberOfValues = DEFAULT_MAXIMUM_NUMBER_OF_VALUES_FOR_DESIGNER;
+        }
+        maximumNumberOfValues = attributes.getInteger(R.styleable.SnakeView_maximumNumberOfValues,
+                defaultMaximumNumberOfValues);
+        animationDuration = attributes.getInteger(R.styleable.SnakeView_animationDuration,
+                DEFAULT_ANIMATION_DURATION);
+        if (maximumNumberOfValues < MINUMUM_NUMBER_OF_VALUES) {
+            throw new IllegalArgumentException("The maximum number of values cannot be less than three.");
+        }
+        attributes.recycle();
     }
 
     private void initializeView() {
@@ -123,11 +170,14 @@ public class SnakeView extends View {
     }
 
     private void initializeCacheForDesigner() {
-        maximumNumberOfValues = DEFAULT_MAXIMUM_NUMBER_OF_VALUES_FOR_DESIGNER;
         valuesCache = new ConcurrentLinkedQueue<>();
-        valuesCache.add(minValue);
-        valuesCache.add(maxValue);
-        valuesCache.add(minValue);
+        for (int counter = 0; counter < maximumNumberOfValues; counter++) {
+            if (counter % 2 == 0) {
+                valuesCache.add(minValue);
+            } else {
+                valuesCache.add(maxValue);
+            }
+        }
         previousValuesCache = reverseCache();
         currentValuesCache = reverseCache();
     }
@@ -218,7 +268,7 @@ public class SnakeView extends View {
     private void playAnimation() {
         ObjectAnimator animator = ObjectAnimator.ofFloat(this, "animationProgress", 0.0f, 1.0f);
         animator.setTarget(this);
-        animator.setDuration(ANIMATION_DURATION);
+        animator.setDuration(animationDuration);
         animator.setInterpolator(new LinearInterpolator());
         animator.start();
     }
