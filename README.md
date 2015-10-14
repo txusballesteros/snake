@@ -18,7 +18,7 @@ Add the library dependency to your build.gradle file.
 ```groovy
 dependencies {
     ...
-    compile 'com.txusballesteros:Snake:1.0'
+    compile 'com.txusballesteros:snake:1.0'
 }
 ```
 
