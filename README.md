@@ -7,7 +7,7 @@ Snake library is a simple and animation line chart for Android.
 
 ## Latest Version
 
-[ ![Download](https://api.bintray.com/packages/txusballesteros/maven/Snake/images/download.svg) ](https://bintray.com/txusballesteros/maven/Snake/_latestVersion) ![](https://img.shields.io/badge/platform-android-green.svg)[![Android Arsenal](https://img.shields.io/badge/Android%20Arsenal-Snake-green.svg?style=flat)](https://android-arsenal.com/details/1/2675)
+[ ![Download](https://api.bintray.com/packages/txusballesteros/maven/Snake/images/download.svg) ](https://bintray.com/txusballesteros/maven/Snake/_latestVersion) ![](https://img.shields.io/badge/platform-android-green.svg) [![Android Arsenal](https://img.shields.io/badge/Android%20Arsenal-Snake-green.svg?style=flat)](https://android-arsenal.com/details/1/2675)
 
 ## How to use
 
