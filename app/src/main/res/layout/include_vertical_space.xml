@@ -23,28 +23,10 @@
  *
  * Contact: Txus Ballesteros <txus.ballesteros@gmail.com>
 -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical"
-    android:gravity="center"
-    android:background="#ffffff">
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <include layout="@layout/include_hrm_counter" />
-
-    <include layout="@layout/include_vertical_space" />
-
-    <com.txusballesteros.SnakeView
-        android:id="@+id/snake"
-        android:layout_gravity="center"
+    <Space
         android:layout_width="match_parent"
-        android:paddingLeft="4dp"
-        android:paddingRight="4dp"
-        android:layout_height="100dp"
-        app:minValue="50"
-        app:maxValue="180"
-        app:maximumNumberOfValues="10"
-        app:strokeColor="@color/brand" />
+        android:layout_height="50dp" />
 
-</LinearLayout>
+</merge>

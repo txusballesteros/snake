@@ -44,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        getWindow().setBackgroundDrawable(null);
         text = (TextView)findViewById(R.id.text);
         snakeView = (SnakeView)findViewById(R.id.snake);
     }
@@ -77,6 +78,6 @@ public class MainActivity extends AppCompatActivity {
                     generateValue();
                 }
             }
-        }, 1000);
+        }, 500);
     }
 }

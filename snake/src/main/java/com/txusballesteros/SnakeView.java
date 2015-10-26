@@ -24,7 +24,9 @@
  */
 package com.txusballesteros;
 
+import android.animation.Animator;
 import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -35,7 +37,9 @@ import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
+import android.view.animation.BounceInterpolator;
 import android.view.animation.LinearInterpolator;
+import android.view.animation.OvershootInterpolator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -272,16 +276,16 @@ public class SnakeView extends View {
     }
 
     private void playAnimation() {
-        ObjectAnimator animator = ObjectAnimator.ofFloat(this, "animationProgress", 0.0f, 1.0f);
-        animator.setTarget(this);
+        ValueAnimator animator = ValueAnimator.ofFloat(0f, 1f);
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                SnakeView.this.animationProgress = (float)animation.getAnimatedValue();;
+                invalidate();
+            }
+        });
         animator.setDuration(animationDuration);
         animator.setInterpolator(new LinearInterpolator());
         animator.start();
-    }
-
-    @SuppressWarnings("unused")
-    private void setAnimationProgress(float progress) {
-        this.animationProgress = progress;
-        invalidate();
     }
 }
