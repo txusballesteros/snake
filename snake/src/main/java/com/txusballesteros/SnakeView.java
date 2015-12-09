@@ -100,8 +100,10 @@ public class SnakeView extends View {
     }
 
     public void addValue(float value) {
-        if (value < minValue || value > maxValue) {
-            throw new IllegalArgumentException("The value is out of min or max limits.");
+        if (scaleMode == SCALE_MODE_FIXED) {
+            if (value < minValue || value > maxValue) {
+                throw new IllegalArgumentException("The value is out of min or max limits.");
+            }
         }
         previousValuesCache = cloneCache();
         if (valuesCache.size() == maximumNumberOfValues) {
@@ -109,6 +111,9 @@ public class SnakeView extends View {
         }
         valuesCache.add(value);
         currentValuesCache = cloneCache();
+        if (scaleMode == SCALE_MODE_AUTO) {
+            calculateScales();
+        }
         playAnimation();
     }
 
@@ -150,8 +155,10 @@ public class SnakeView extends View {
                 DEFAULT_STROKE_COLOR);
         strokeWidth = attributes.getDimensionPixelSize(R.styleable.SnakeView_strokeWidth,
                 DEFAULT_STROKE_WIDTH_IN_DP);
-        minValue = attributes.getFloat(R.styleable.SnakeView_minValue, DEFAULT_MIN_VALUE);
-        maxValue = attributes.getFloat(R.styleable.SnakeView_maxValue, DEFAULT_MAX_VALUE);
+        if (scaleMode == SCALE_MODE_FIXED) {
+            minValue = attributes.getFloat(R.styleable.SnakeView_minValue, DEFAULT_MIN_VALUE);
+            maxValue = attributes.getFloat(R.styleable.SnakeView_maxValue, DEFAULT_MAX_VALUE);
+        }
         int defaultMaximumNumberOfValues = DEFAULT_MAXIMUM_NUMBER_OF_VALUES_FOR_RUNTIME;
         if (isInEditMode()) {
             defaultMaximumNumberOfValues = DEFAULT_MAXIMUM_NUMBER_OF_VALUES_FOR_DESIGNER;
@@ -272,22 +279,23 @@ public class SnakeView extends View {
 
     private void calculateScales() {
         if (drawingArea != null) {
-            float minimumValue = minValue;
-            float maximumValue = minValue;
             if (scaleMode == SCALE_MODE_AUTO) {
                 for (int index = 0; index < currentValuesCache.size(); index++) {
-                    float value = currentValuesCache.get(index);
+                    float previousValue = previousValuesCache.get(index);
+                    float currentValue = currentValuesCache.get(index);
                     if (index == 0) {
-                        minimumValue = value;
-                        maximumValue = value;
+                        minValue = Math.min(currentValue, previousValue);
+                        maxValue = Math.max(currentValue, previousValue);
                     } else {
-                        minimumValue = Math.min(minimumValue, value);
-                        maximumValue = Math.max(maximumValue, value);
+                        minValue = Math.min(minValue, currentValue);
+                        maxValue = Math.max(maxValue, currentValue);
+                        minValue = Math.min(minValue, previousValue);
+                        maxValue = Math.max(maxValue, previousValue);
                     }
                 }
             }
             scaleInX = (drawingArea.width() / (maximumNumberOfValues - 1));
-            scaleInY = (drawingArea.height() / (maximumValue - minimumValue));
+            scaleInY = (drawingArea.height() / (maxValue - minValue));
         } else {
             scaleInY = 0f;
             scaleInX = 0f;
@@ -299,7 +307,7 @@ public class SnakeView extends View {
         animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
-                SnakeView.this.animationProgress = (float)animation.getAnimatedValue();;
+                SnakeView.this.animationProgress = (float)animation.getAnimatedValue();
                 invalidate();
             }
         });
