@@ -24,8 +24,6 @@
  */
 package com.txusballesteros;
 
-import android.animation.Animator;
-import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.annotation.TargetApi;
 import android.content.Context;
@@ -37,9 +35,7 @@ import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
-import android.view.animation.BounceInterpolator;
 import android.view.animation.LinearInterpolator;
-import android.view.animation.OvershootInterpolator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,7 +54,8 @@ public class SnakeView extends View {
     public static final float DEFAULT_MIN_VALUE = 0f;
     public static final float DEFAULT_MAX_VALUE = 1f;
     public static final int MINIMUM_NUMBER_OF_VALUES = 3;
-
+    public static final int SCALE_MODE_FIXED = 0;
+    public static final int SCALE_MODE_AUTO = 1;
     private int maximumNumberOfValues = DEFAULT_MAXIMUM_NUMBER_OF_VALUES_FOR_RUNTIME;
     private int strokeColor = DEFAULT_STROKE_COLOR;
     private int strokeWidth = DEFAULT_STROKE_WIDTH_IN_DP;
@@ -73,12 +70,19 @@ public class SnakeView extends View {
     private float scaleInY = 0f;
     private float minValue = DEFAULT_MIN_VALUE;
     private float maxValue = DEFAULT_MAX_VALUE;
+    private int scaleMode = SCALE_MODE_FIXED;
 
     public void setMaximumNumberOfValues(int maximumNumberOfValues) {
         if (maximumNumberOfValues < MINIMUM_NUMBER_OF_VALUES) {
             throw new IllegalArgumentException("The maximum number of values cannot be less than three.");
         }
         this.maximumNumberOfValues = maximumNumberOfValues;
+        calculateScales();
+        initializeCaches();
+    }
+
+    public void setScaleMode(int scaleMode) {
+        this.scaleMode = scaleMode;
         calculateScales();
         initializeCaches();
     }
@@ -141,6 +145,7 @@ public class SnakeView extends View {
         TypedArray attributes = getContext().getTheme()
                 .obtainStyledAttributes(attrs, R.styleable.SnakeView,
                         DEF_STYLE_ATTR, DEF_STYLE_RES);
+        scaleMode = attributes.getInteger(R.styleable.SnakeView_scaleMode, scaleMode);
         strokeColor = attributes.getColor(R.styleable.SnakeView_strokeColor,
                 DEFAULT_STROKE_COLOR);
         strokeWidth = attributes.getDimensionPixelSize(R.styleable.SnakeView_strokeWidth,
@@ -267,8 +272,22 @@ public class SnakeView extends View {
 
     private void calculateScales() {
         if (drawingArea != null) {
+            float minimumValue = minValue;
+            float maximumValue = minValue;
+            if (scaleMode == SCALE_MODE_AUTO) {
+                for (int index = 0; index < currentValuesCache.size(); index++) {
+                    float value = currentValuesCache.get(index);
+                    if (index == 0) {
+                        minimumValue = value;
+                        maximumValue = value;
+                    } else {
+                        minimumValue = Math.min(minimumValue, value);
+                        maximumValue = Math.max(maximumValue, value);
+                    }
+                }
+            }
             scaleInX = (drawingArea.width() / (maximumNumberOfValues - 1));
-            scaleInY = (drawingArea.height() / (maxValue - minValue));
+            scaleInY = (drawingArea.height() / (maximumValue - minimumValue));
         } else {
             scaleInY = 0f;
             scaleInX = 0f;
