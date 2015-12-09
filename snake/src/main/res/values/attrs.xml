@@ -31,5 +31,9 @@
         <attr name="maxValue" format="float" />
         <attr name="maximumNumberOfValues" format="integer" />
         <attr name="animationDuration" format="integer" />
+        <attr name="scaleMode">
+            <enum name="fixed" value="0" />
+            <enum name="auto" value="1" />
+        </attr>
     </declare-styleable>
 </resources>
