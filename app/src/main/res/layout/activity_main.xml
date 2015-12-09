@@ -45,6 +45,7 @@
         app:minValue="50"
         app:maxValue="180"
         app:maximumNumberOfValues="10"
+        app:scaleMode="auto"
         app:strokeColor="@color/brand" />
 
 </LinearLayout>
