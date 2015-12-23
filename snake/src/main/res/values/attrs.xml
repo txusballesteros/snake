@@ -26,6 +26,7 @@
 <resources>
     <declare-styleable name="SnakeView">
         <attr name="strokeColor" format="color" />
+        <attr name="fillColor" format="color" />
         <attr name="strokeWidth" format="dimension" />
         <attr name="minValue" format="float" />
         <attr name="maxValue" format="float" />
@@ -34,6 +35,11 @@
         <attr name="scaleMode">
             <enum name="fixed" value="0" />
             <enum name="auto" value="1" />
+        </attr>
+        <attr name="chartStyle">
+            <enum name="stroke" value="0" />
+            <enum name="fill" value="1" />
+            <enum name="fill_stroke" value="2" />
         </attr>
     </declare-styleable>
 </resources>

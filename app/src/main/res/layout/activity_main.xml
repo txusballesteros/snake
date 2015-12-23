@@ -46,6 +46,9 @@
         app:maxValue="180"
         app:maximumNumberOfValues="10"
         app:scaleMode="auto"
-        app:strokeColor="@color/brand" />
+        app:chartStyle="fill_stroke"
+        app:strokeWidth="2dp"
+        app:strokeColor="@color/brand"
+        app:fillColor="@color/brand_fill"/>
 
 </LinearLayout>

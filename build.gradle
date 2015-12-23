@@ -39,7 +39,7 @@ buildscript {
 allprojects {
     allprojects {
         ext {
-            libraryVersion = '1.1.0'
+            libraryVersion = '1.2.0'
             mavenGroupId = 'com.txusballesteros'
             siteUrl = 'https://github.com/txusballesteros/snake'
             gitUrl = 'https://github.com/txusballesteros/snake.git'

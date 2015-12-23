@@ -24,5 +24,6 @@
  * Contact: Txus Ballesteros <txus.ballesteros@gmail.com>
 -->
 <resources>
-    <color name="brand">#bf080B</color>
+    <color name="brand">#ffbf080B</color>
+    <color name="brand_fill">#80bf080B</color>
 </resources>

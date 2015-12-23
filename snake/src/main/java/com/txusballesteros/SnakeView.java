@@ -46,6 +46,7 @@ public class SnakeView extends View {
     private final static int DEFAULT_MAXIMUM_NUMBER_OF_VALUES_FOR_DESIGNER = 3;
     private final static int DEFAULT_MAXIMUM_NUMBER_OF_VALUES_FOR_RUNTIME = 10;
     private final static int DEFAULT_STROKE_COLOR = 0xff78c257;
+    private final static int DEFAULT_FILL_COLOR = 0x8078c257;
     private final static int DEFAULT_STROKE_WIDTH_IN_DP = 3;
     public static final int DEFAULT_ANIMATION_DURATION = 200;
     public static final float BEZIER_FINE_FIT = 0.5f;
@@ -56,11 +57,16 @@ public class SnakeView extends View {
     public static final int MINIMUM_NUMBER_OF_VALUES = 3;
     public static final int SCALE_MODE_FIXED = 0;
     public static final int SCALE_MODE_AUTO = 1;
+    public static final int CHART_STILE_STROKE = 0;
+    public static final int CHART_STILE_FILL = 1;
+    public static final int CHART_STILE_FILL_STROKE = 2;
     private int maximumNumberOfValues = DEFAULT_MAXIMUM_NUMBER_OF_VALUES_FOR_RUNTIME;
     private int strokeColor = DEFAULT_STROKE_COLOR;
-    private int strokeWidth = DEFAULT_STROKE_WIDTH_IN_DP;
+    private int strokeWidthInPx = (int)dp2px(DEFAULT_STROKE_WIDTH_IN_DP);
+    private int fillColor = DEFAULT_FILL_COLOR;
     private RectF drawingArea;
     private Paint paint;
+    private Paint fillPaint;
     private Queue<Float> valuesCache;
     private List<Float> previousValuesCache;
     private List<Float> currentValuesCache;
@@ -71,6 +77,8 @@ public class SnakeView extends View {
     private float minValue = DEFAULT_MIN_VALUE;
     private float maxValue = DEFAULT_MAX_VALUE;
     private int scaleMode = SCALE_MODE_FIXED;
+    private int chartStyle = CHART_STILE_STROKE;
+
 
     public void setMaximumNumberOfValues(int maximumNumberOfValues) {
         if (maximumNumberOfValues < MINIMUM_NUMBER_OF_VALUES) {
@@ -151,10 +159,10 @@ public class SnakeView extends View {
                 .obtainStyledAttributes(attrs, R.styleable.SnakeView,
                         DEF_STYLE_ATTR, DEF_STYLE_RES);
         scaleMode = attributes.getInteger(R.styleable.SnakeView_scaleMode, scaleMode);
-        strokeColor = attributes.getColor(R.styleable.SnakeView_strokeColor,
-                DEFAULT_STROKE_COLOR);
-        strokeWidth = attributes.getDimensionPixelSize(R.styleable.SnakeView_strokeWidth,
-                DEFAULT_STROKE_WIDTH_IN_DP);
+        strokeColor = attributes.getColor(R.styleable.SnakeView_strokeColor, strokeColor);
+        fillColor = attributes.getColor(R.styleable.SnakeView_fillColor, fillColor);
+        strokeWidthInPx = attributes.getDimensionPixelSize(R.styleable.SnakeView_strokeWidth, strokeWidthInPx);
+        chartStyle = attributes.getInteger(R.styleable.SnakeView_chartStyle, chartStyle);
         if (scaleMode == SCALE_MODE_FIXED) {
             minValue = attributes.getFloat(R.styleable.SnakeView_minValue, DEFAULT_MIN_VALUE);
             maxValue = attributes.getFloat(R.styleable.SnakeView_maxValue, DEFAULT_MAX_VALUE);
@@ -183,8 +191,14 @@ public class SnakeView extends View {
         paint.setFlags(Paint.ANTI_ALIAS_FLAG);
         paint.setColor(strokeColor);
         paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeCap(Paint.Cap.ROUND);
-        paint.setStrokeWidth(dp2px(strokeWidth));
+        if (chartStyle == CHART_STILE_STROKE) {
+            paint.setStrokeCap(Paint.Cap.ROUND);
+        }
+        paint.setStrokeWidth(strokeWidthInPx);
+        fillPaint = new Paint();
+        fillPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
+        fillPaint.setColor(fillColor);
+        fillPaint.setStyle(Paint.Style.FILL);
     }
 
     private void initializeCaches() {
@@ -231,10 +245,10 @@ public class SnakeView extends View {
     }
 
     private void calculateDrawingArea(int width, int height) {
-        int left = (strokeWidth * 2) + getPaddingLeft();
-        int top = (strokeWidth * 2) + getPaddingTop();
-        int right = width - getPaddingRight() - strokeWidth;
-        int bottom = height - getPaddingBottom() - strokeWidth;
+        int left = (strokeWidthInPx * 2) + getPaddingLeft();
+        int top = (strokeWidthInPx * 2) + getPaddingTop();
+        int right = width - getPaddingRight() - strokeWidthInPx;
+        int bottom = height - getPaddingBottom() - strokeWidthInPx;
         drawingArea = new RectF(left, top, right, bottom);
     }
 
@@ -242,13 +256,24 @@ public class SnakeView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         if (!valuesCache.isEmpty()) {
-            Path path = buildPath();
-            canvas.drawPath(path, paint);
+            if (chartStyle == CHART_STILE_FILL || chartStyle == CHART_STILE_FILL_STROKE) {
+                Path fillPath = buildPath(true);
+                canvas.drawPath(fillPath, fillPaint);
+            }
+
+            if (chartStyle == CHART_STILE_STROKE || chartStyle == CHART_STILE_FILL_STROKE) {
+                Path strokePath = buildPath(false);
+                canvas.drawPath(strokePath, paint);
+            }
         }
     }
 
-    private Path buildPath() {
+    private Path buildPath(boolean forFill) {
+        int strokePadding = (strokeWidthInPx / 2);
         Path path = new Path();
+        if (forFill) {
+            path.moveTo(drawingArea.left, drawingArea.bottom + strokePadding);
+        }
         float previousX = drawingArea.left;
         float previousY = drawingArea.bottom;
         for (int index = 0; index < currentValuesCache.size(); index++) {
@@ -258,7 +283,11 @@ public class SnakeView extends View {
             float x = drawingArea.left + (scaleInX * index);
             float y = drawingArea.bottom - ((pathValue - minValue) * scaleInY);
             if (index == 0) {
-                path.moveTo(x, y);
+                if (forFill) {
+                    path.lineTo(x, y);
+                } else {
+                    path.moveTo(x, y);
+                }
             } else {
                 float bezierControlX = previousX + ((x - previousX) * BEZIER_FINE_FIT);
                 float controlPointX1 = bezierControlX;
@@ -273,6 +302,9 @@ public class SnakeView extends View {
             }
             previousX = x;
             previousY = y;
+        }
+        if (forFill) {
+            path.lineTo(drawingArea.right, drawingArea.bottom + strokePadding);
         }
         return path;
     }
